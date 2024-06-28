@@ -1,0 +1,222 @@
+# -*- coding: utf-8 -*-
+import glob
+import os
+import sys
+import json
+import pandas as pd
+
+def main():
+    # key = participant
+    # value = "/projects/b1108/studies/foundations2/data/processed/neuroimaging/23_fmriprep_nodc" + participant + "/ses-1" 
+    
+    directory = "/projects/b1108/studies/foundations2/data/processed/neuroimaging/23_fmriprep_nodc"
+    directory_2 = "/projects/b1108/studies/foundations2/data/raw/neuroimaging/bids"
+    directory_3 = "/projects/b1108/studies/transitions2/data/raw/neuroimaging/bids"
+    directory_4 = "/projects/b1108/studies/transitions2/data/processed/neuroimaging/fmriprep_ses-1"
+    func_pattern = "sub-f1*" + "/ses-1"
+    func_pattern_t = "sub-t1*" + "/ses-1"
+    func_files = glob.glob(directory + "/" + func_pattern)
+    func_files_2 = glob.glob(directory_2 + "/" + func_pattern)
+    func_files_3 = glob.glob(directory_3 + "/" + func_pattern_t)
+    func_files_4 = glob.glob(directory_4 + "/" + func_pattern_t)
+    df = pd.DataFrame(columns=['Subject', 'Anat Files', 'Func Files', 'MID Files','REST Files', 'Total'])
+    df_raw = pd.DataFrame(columns=['Subject', 'Total Anat', 'Total Func', 'MID 1', 'MID 2', 'REST 1', 'REST 2', 'REST 3', 'REST 4'])
+    df_transitions_raw = pd.DataFrame(columns=['Subject', 'Total Anat', 'Total Func', 'MID 1', 'MID 2', 'REST 1', 'REST 2', 'REST 3', 'REST 4'])
+    df_transitions = pd.DataFrame(columns=['Subject', 'Anat Files', 'Func Files', 'MID Files','REST Files', 'Total'])
+    
+    ##
+    ## Populate dataframe for Transitions fmriprep
+    ##
+    for file in func_files_4:
+        subject  = file.split("/")[-2]
+        # count anat files
+        anat_pattern = "sub-t*"
+        anat_files = glob.glob(file + "/anat/" + anat_pattern)
+        # print("Anat Files: " + str(len(anat_files)))
+
+        anat_files = len(anat_files)
+
+        # count func files
+        func_pattern = "sub-t*"
+        func_files = glob.glob(file + "/func/" + func_pattern)
+        mid_files = glob.glob(file + "/func/" + "sub-t1*" + "_ses-1_task-mid*")
+        rest_files = glob.glob(file + "/func/" + "sub-t1*" + "_ses-1_task-rest_run*")
+
+        func_files = len(func_files)
+        mid_files_len = len(mid_files)
+        rest_files_len = len(rest_files)
+
+        total_files = anat_files+func_files
+
+        df_transitions = df_transitions.append({'Subject': subject, 'Anat Files': anat_files, 'Func Files': func_files, 'MID Files':  mid_files_len, "REST Files": rest_files_len, 'Total': total_files}, ignore_index=True)
+        df_transitions['Subject_number'] = df_transitions['Subject'].str.extract(r'(\d+)').astype(int)
+        df_transitions_sorted = df_transitions.sort_values(by='Subject_number')
+        df_transitions_sorted = df_transitions_sorted.drop('Subject_number', axis=1)
+
+    # print(df_transitions_sorted)
+    # Export DF to csv file
+    df_transitions_sorted.to_csv("Transitions2-fmriprep.csv")
+    
+    ##
+    ## Populate dataframe for Transitions bids
+    ##
+    # for file in func_files_3:
+    #     # Should be 2 files in anat
+    #     subject  = file.split("/")[-2]
+
+    #     # count anat files - should be 2
+    #     anat_pattern = "sub-t*"
+    #     anat_files = glob.glob(file + "/anat/" + anat_pattern)
+    #     if (len(anat_files) == 2):
+    #         anat = 'x'
+    #     else:
+    #         anat = 'n/a'
+
+    #     # 4 Rest files, 4 MID files
+    #     func_pattern = "sub-t*"
+    #     func_files = glob.glob(file + "/func/" + func_pattern)
+    #     func_len = len(func_files)
+    #     mid_1 = 0
+    #     mid_2 = 0
+    #     rest_1 = 0
+    #     rest_2 = 0
+    #     rest_3 = 0
+    #     rest_4 = 0
+    #     for f in func_files:
+    #         file_type = f.split("/")[-1]
+    #         run_type = file_type.split("-")[-2]
+    #         run_num = file_type.split("-")[-1]
+
+    #         if "MID" in run_type or "mid" in run_type:
+    #             if '.tsv' in file_type:
+    #                 continue
+    #             elif "1" in run_num:
+    #                 mid_1 += 1
+    #             elif "2" in run_num:
+    #                 mid_2 += 1
+
+    #         if "rest" in run_type:
+    #             if "1" in run_num:
+    #                 rest_1 += 1
+    #             elif "2" in run_num:
+    #                 rest_2 += 1
+    #             elif "3" in run_num:
+    #                 rest_3 += 1
+    #             elif "4" in run_num:
+    #                 rest_4 += 1
+
+    #         # mid_count_1 = "x" if mid_1 == 2 else 'n/a'
+    #         # mid_count_2 = "x" if mid_2 == 2 else 'n/a'
+    #         mid_count_1 = mid_1
+    #         mid_count_2 = mid_2
+
+    #     df_transitions_raw = df_transitions_raw.append({'Subject': subject, 'Total Anat': anat, 'MID 1': mid_count_1, 'MID 2': mid_count_2, 'REST 1': rest_1, 'REST 2': rest_2, 'REST 3': rest_3, 'REST 4': rest_4, "Total Func": func_len}, ignore_index=True)
+    
+    #     df_transitions_raw['Subject_number'] = df_transitions_raw['Subject'].str.extract(r'(\d+)').astype(int)
+    #     df_transitions_raw_sorted = df_transitions_raw.sort_values(by='Subject_number')
+    #     df_transitions_raw_sorted = df_transitions_raw_sorted.drop('Subject_number', axis=1)
+
+    # print(df_transitions_raw_sorted)
+    # df_transitions_raw_sorted.to_csv("Transitions2-bids.csv") 
+
+    #
+    # Populate dataframe for Foundations bids
+    # 
+    # for file in func_files_2:
+    #     # Should be 2 files in anat
+    #     subject  = file.split("/")[-2]
+
+    #     # count anat files - should be 2
+    #     anat_pattern = "sub-f*"
+    #     anat_files = glob.glob(file + "/anat/" + anat_pattern)
+    #     if (len(anat_files) == 2):
+    #         anat = 'x'
+    #     else:
+    #         anat = 'n/a'
+
+    #     # 4 Rest files, 4 MID files
+    #     func_pattern = "sub-f*"
+    #     func_files = glob.glob(file + "/func/" + func_pattern)
+    #     func_len = len(func_files)
+    #     mid_1 = 0
+    #     mid_2 = 0
+    #     rest_1 = 0
+    #     rest_2 = 0
+    #     rest_3 = 0
+    #     rest_4 = 0
+    #     for f in func_files:
+    #         file_type = f.split("/")[-1]
+    #         run_type = file_type.split("-")[-2]
+    #         run_num = file_type.split("-")[-1]
+
+    #         if "MID" in run_type or "mid" in run_type:
+    #             if '.tsv' in file_type:
+    #                 continue
+    #             elif "1" in run_num:
+    #                 mid_1 += 1
+    #             elif "2" in run_num:
+    #                 mid_2 += 1
+
+    #         if "rest" in run_type:
+    #             if "1" in run_num:
+    #                 rest_1 += 1
+    #             elif "2" in run_num:
+    #                 rest_2 += 1
+    #             elif "3" in run_num:
+    #                 rest_3 += 1
+    #             elif "4" in run_num:
+    #                 rest_4 += 1
+
+    #         # mid_count_1 = "x" if mid_1 == 2 else 'n/a'
+    #         # mid_count_2 = "x" if mid_2 == 2 else 'n/a'
+    #         mid_count_1 = mid_1
+    #         mid_count_2 = mid_2
+
+    #     df_raw = df_raw.append({'Subject': subject, 'Total Anat': anat, 'MID 1': mid_count_1, 'MID 2': mid_count_2, 'REST 1': rest_1, 'REST 2': rest_2, 'REST 3': rest_3, 'REST 4': rest_4, "Total Func": func_len}, ignore_index=True)
+    
+    #     df_raw['Subject_number'] = df_raw['Subject'].str.extract(r'(\d+)').astype(int)
+    #     df_raw_sorted = df_raw.sort_values(by='Subject_number')
+    #     df_raw_sorted = df_raw_sorted.drop('Subject_number', axis=1)
+
+    # # print(df_raw_sorted) 
+    # df_raw_sorted.to_csv("Foundations2-bids.csv") 
+
+
+    #
+    # Populate Dataframe for Foundations fmriprep
+    #
+    # for file in func_files:
+    #     # print("--------------------------------------------------------------------------------")
+    #     subject  = file.split("/")[-2]
+    #     # count anat files
+    #     anat_pattern = "sub-f*"
+    #     anat_files = glob.glob(file + "/anat/" + anat_pattern)
+    #     # print("Anat Files: " + str(len(anat_files)))
+
+    #     anat_files = len(anat_files)
+
+    #     # count func files
+    #     func_pattern = "sub-f*"
+    #     func_files = glob.glob(file + "/func/" + func_pattern)
+    #     mid_files = glob.glob(file + "/func/" + "sub-f1*" + "_ses-1_task-mid*")
+    #     rest_files = glob.glob(file + "/func/" + "sub-f1*" + "_ses-1_task-rest_run*")
+    #     # print("Func Files: " + str(len(func_files)))
+
+    #     func_files = len(func_files)
+    #     mid_files_len = len(mid_files)
+    #     rest_files_len = len(rest_files)
+
+    #     total_files = anat_files+func_files
+
+    #     df = df.append({'Subject': subject, 'Anat Files': anat_files, 'Func Files': func_files, 'MID Files':  mid_files_len, "REST Files": rest_files_len, 'Total': total_files}, ignore_index=True)
+    #     df['Subject_number'] = df['Subject'].str.extract(r'(\d+)').astype(int)
+    #     df_sorted = df.sort_values(by='Subject_number')
+    #     df_sorted = df_sorted.drop('Subject_number', axis=1)
+
+    # # print(df_sorted)
+    # # print(df_sorted.shape)
+    # df_sorted.to_csv("Foundations2-fmriprep.csv") 
+
+
+if __name__ == "__main__":
+    main()
