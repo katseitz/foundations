@@ -3,7 +3,7 @@
 #SBATCH -A p31833 #TODO insert your own pnumber
 #SBATCH -p normal
 #SBATCH -t 16:00:00
-#SBATCH --array=0-2%10 #165 #TODO change this
+#SBATCH --array=1-1%10 #165 #TODO change this
 #SBATCH --job-name="fmriprep_TEAM_\${SLURM_ARRAY_TASK_ID}"
 #SBATCH --output=fmriprep.%A_%a.out
 #SBATCH --nodes=1
