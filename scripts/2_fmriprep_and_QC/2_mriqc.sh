@@ -17,7 +17,8 @@ cd /projects/b1108
 
 singularity run --cleanenv -B /projects/b1108:/projects/b1108/ \
 /projects/b1108/software/singularity_images/mriqc-23.0.1.simg \
--v /projects/b1108/studies/foundations2/data/raw/neuroimaging/bids/ \
--v /projects/b1108/studies/foundations2/data/processed/neuroimaging/mriqc/$SUB/ \
+-v /projects/b1108/studies/foundations/data/raw/neuroimaging/bids/ \
+-v /projects/b1108/studies/foundations/data/preprocessed/neuroimaging/mriqc/$SUB/ \
+-w /projects/b1108/studies/foundations/data/preprocessed/neuroimaging/work/ \
 participant --participant-label ${1}
 
