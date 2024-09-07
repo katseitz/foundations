@@ -150,8 +150,8 @@ def postproc_rest(sub, ses, funcindir, sesoutdir):
             np.savetxt(sesoutdir+'/'+sub+'_'+ses+'_run-0' + str(i) + '_' + network + '_network_corrmat.csv',
                 corr_matrix, delimiter=',')
             tr_list.append([sub, ses, i, rest_cen2.shape])
-    i = i+1
-    print("updated i " + str(i))
+        i = i+1
+        print("updated i " + str(i))
     return tr_list
         
 

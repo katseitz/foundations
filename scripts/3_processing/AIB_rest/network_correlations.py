@@ -4,9 +4,9 @@ import glob
 import csv
 import itertools, os, glob
 
-path_conn = ('/projects/b1108/studies/transitions2/data/processed/neuroimaging/AIB_RestOnly_Networks') #or use below for same data
+path_conn = ('/projects/b1108/studies/foundations/data/processed/neuroimaging/aib_networks_rest') #or use below for same data
 #path_conn = ('/Volumes/ACNL/data_pre_2023/ACarroll/BrainMAPD_T4_rsfMRI/Connectivity')
-save_dir1 = ('/projects/b1108/studies/transitions2/data/processed/neuroimaging/AIB_RestOnly_Networks/final_data')
+save_dir1 = ('/projects/b1108/studies/foundations/data/processed/neuroimaging/aib_networks_rest/final_data')
 #save_dir2 = ('/Volumes/ACNL/data_pre_2023/ACarroll/BrainMAPD_T4_rsfMRI/Connectivity/Output')
 allFiles_conn = glob.glob(os.path.join(path_conn, '*/*/*corrmat.csv'))
 
@@ -38,5 +38,5 @@ Output = pd.DataFrame(network_output)
 
 #save data to both local and ACNL drives
 
-path_output_save1 = save_dir1 + os.path.sep + 'Transitions_rsfMRIConnectivity_051724.csv'
+path_output_save1 = save_dir1 + os.path.sep + 'foundations_rsfMRIConnectivity_062924.csv'
 Output.to_csv(path_output_save1, index=False) #do no save the index column

@@ -1,12 +1,12 @@
 #!/usr/bin/bash
 
-#SBATCH -A p31833
+#SBATCH -A p32480
 #SBATCH -p short
 #SBATCH -t 04:00:00
-#SBATCH --mem=25G
+#SBATCH --mem=20G
 #SBATCH -J qc-found
 #SBATCH	--mail-type=END,FAIL
-#SBATCH	--mail-user=katharinaseitz@northwestern.edu
+#SBATCH	--mail-user=akash.rathi@northwestern.edu
 
 SUB=$1
 

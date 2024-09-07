@@ -3,7 +3,7 @@
 #SBATCH -A p31833 #TODO insert your own pnumber
 #SBATCH -p normal
 #SBATCH -t 16:00:00
-#SBATCH --array=1-1%10 #165 #TODO change this
+#SBATCH --array=0-1%10 #165 #TODO change this
 #SBATCH --job-name="fmriprep_TEAM_\${SLURM_ARRAY_TASK_ID}"
 #SBATCH --output=fmriprep.%A_%a.out
 #SBATCH --nodes=1
@@ -22,7 +22,7 @@ export SINGULARITYENV_TEMPLATEFLOW_HOME=/projects/b1108/templateflow
 #WITHOUT FMAP
 singularity run --cleanenv --containall -B /projects/b1108:/projects/b1108 \
 -B /projects/b1108/studies/foundations/data/preprocessed/neuroimaging:/base \
--B /projects/b1108/studies/foundations/scripts/2_QC:/scripts \
+-B /projects/b1108/studies/foundations/scripts/2_fmriprep_and_QC:/scripts \
 -B /projects/b1108/templateflow:/projects/b1108/templateflow \
 -B /projects/b1108/studies/foundations/data/raw/neuroimaging/bids:/data \
 /projects/b1108/software/singularity_images/fmriprep-23.2.1.simg \

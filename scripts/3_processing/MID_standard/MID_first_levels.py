@@ -14,40 +14,58 @@ import csv
 import matplotlib.pyplot as plt
 
 from nilearn.datasets import load_mni152_brain_mask
-from nilearn.input_data import NiftiLabelsMasker #0.8.1
 from nilearn.glm.first_level import FirstLevelModel
 from nilearn.glm.first_level import make_first_level_design_matrix
 from nilearn.image import concat_imgs, mean_img, resample_img
-from nilearn.plotting import plot_design_matrix
-from nilearn import plotting
-from nilearn import signal
 from nilearn import image
+from nilearn.image import resample_to_img
 from nilearn.interfaces.bids import save_glm_to_bids
 import scipy.signal as sgnl #1.5.4
 #from get_qual_metrics import get_qual_metrics
 
 ANT_REW = 1 #1 for anticipation, 0 for reward
-events_base = '/projects/b1108/studies/transitions/data/raw/neuroimaging/bids/'
+events_base = '/projects/b1108/studies/foundations/data/raw/neuroimaging/bids/'
+
+affine = [[2.5, 0. , 0. , -73.5],
+        [0. , 2.5, 0. , -111.],
+        [0. , 0. , 2.5, -72.],
+        [0. , 0. , 0. , 1. ]]
 
 def mid_fl(sub, ses, funcindir, sesoutdir):
     tr_list = []
     flist = os.listdir(funcindir)
     i = 1
-    while(i <= len(glob.glob(funcindir + "*_ses-1_task-mid_run-*_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz"))):
+    while(i <= len(glob.glob(funcindir + "*_ses-1_task-mid_run-*_space-MNI152NLin6Asym_desc-preproc_bold.nii.gz"))):
         print("working on run 0" + str(i) + " for participant " + sub)
         
         #### READ IN FILES
         #Load in MID file, and mask
-        file_mid = os.path.join(funcindir, [x for x in flist if ('preproc_bold.nii.gz' in x and 'task-mid_run-0' + str(i) in x)][0])
+        file_mid = os.path.join(funcindir, [x for x in flist if ('_space-MNI152NLin6Asym_desc-preproc_bold.nii.gz' in x and 'task-mid_run-0' + str(i) in x)][0])
         mid_img = nib.load(file_mid)
-        #file_mid_mask = os.path.join(funcindir, [x for x in flist if ('brain_mask.nii.gz' in x and 'task-mid_run-0' + str(i) in x)][0])
-        #mid_mask_img = nib.load(file_mid_mask)
-        mid_mask_img = load_mni152_brain_mask(resolution=None, threshold=0.2)
+        print("mid img affines")
+        print(mid_img.affine)    
+        
+        #resample MID image so that the affines are the same for all images.
+        if(not(mid_img.affine == affine).all()):
+            mid_img = resample_img(mid_img, target_affine = affine)
+        print("resampled mid img affines")
+        print(mid_img.affine)   
+        file_mid_mask = os.path.join(funcindir, [x for x in flist if ('_space-MNI152NLin6Asym_desc-brain_mask.nii.gz' in x and 'task-mid_run-0' + str(i) in x)][0])
+        mid_mask_img = nib.load(file_mid_mask)
+        
+        mni_mask_img = load_mni152_brain_mask(resolution=None, threshold=0.2)
+        print("mni mask affines")
+        print(mni_mask_img.affine)
+        resampled_mni_mask = resample_to_img(mni_mask_img, mid_img, interpolation="nearest")
+        print("resmapled mask affines")
+        print(resampled_mni_mask.affine)
+        
+        
         # Load confounds for MID and read in as pandas df
         confounds_mid_path = os.path.join(funcindir, [x for x in flist if ('task-mid_run-0' + str(i) + '_desc-confounds_timeseries.tsv' in x)][0])
         confounds_mid_df = pd.read_csv(confounds_mid_path, sep='\t')
         # Load parameters for MID #TODO change out ses
-        param_mid_file = open(os.path.join(funcindir, sub+'_ses-1_task-mid_run-0' + str(i) + '_space-MNI152NLin2009cAsym_desc-preproc_bold.json'),)
+        param_mid_file = open(os.path.join(funcindir, sub+'_ses-1_task-mid_run-0' + str(i) + '_space-MNI152NLin6Asym_desc-preproc_bold.json'),)
         param_mid_df = json.load(param_mid_file)
         # Get TRs
         tr = param_mid_df['RepetitionTime']
@@ -107,9 +125,9 @@ def mid_fl(sub, ses, funcindir, sesoutdir):
         
         mid_band.to_filename(sesoutdir+'/'+sub+'_'+ses+'_task-MID_run-0' + str(i) + '_final.nii.gz')
         
-        #### Define First Level Model 
+        #### Define Anticipation First Level Model 
         mid_model = FirstLevelModel(tr,
-                            mask_img=mid_mask_img,
+                            mask_img=resampled_mni_mask,
                             standardize=False, 
                             hrf_model='spm', # 
                             smoothing_fwhm=4) 
@@ -123,14 +141,13 @@ def mid_fl(sub, ses, funcindir, sesoutdir):
                             "ant_lose_5or15 - ant_lose_0",
                             "ant_win_5or15 - ant_lose_5or15"]
         else:
-            contrasts = ["ant_win_5or15 - ant_win_0",
-                         "ant_lose_5or15 - ant_lose_0",
-                         "ant_win_5or15 - ant_lose_5or15"]
-        #generate contrasts and save   
+            contrasts = ["rew_win_5or15_Hit - rew_win_5or15_Miss",
+                         "rew_lose_5or15_Miss - rew_lose_5or15_Hit"]
+        #generate contrasts and save    
         for contrast in contrasts:
             mid_t_map = mid_model.compute_contrast((contrast), output_type="stat")
             contrast_name = contrast.replace(" - ", "_vs_").replace(".", "")
-            mid_t_map.to_filename(sesoutdir + '/' + sub + '_'+ses+'_task-mid_run-0' + str(i) + '_' + contrast_name + '_tmap.nii.gz')
+            mid_t_map.to_filename(sesoutdir + sub + '_'+ses+'_task-mid_run-0' + str(i) + '_' + contrast_name + '_tmap.nii.gz')
         
         # plot the contrasts as soon as they're generated
         # the display is overlaid on the mean fMRI image
@@ -151,22 +168,26 @@ def mid_fl(sub, ses, funcindir, sesoutdir):
         ''' 
         i = i + 1
     return tr_list
+
+def extract_rois():
+    
         
 
 def main():
     ses = "ses-1" #bids ses-1
-    indir = '/projects/b1108/studies/transitions/data/preprocessed/neuroimaging/fmriprep_23_2_0_nofmap/'
-    outdir = '/projects/b1108/studies/transitions/data/processed/neuroimaging/MID_processing_nofmap/'
+    indir = '/projects/b1108/studies/foundations/data/preprocessed/neuroimaging/fmriprep-23.2.1/'
+    outdir = '/projects/b1108/studies/foundations/data/processed/neuroimaging/MID_processing_nofmap/'
     subject = os.scandir(indir)
-    tr_counts = [["ID", "run", "original_shape", "cleaned_shape"]]
+    tr_counts = [["ID", "run", "original_shape", "regressed_TRs"]]
+    problem_subs = ["sub-t1082"]#["sub-t1087", "sub-t1089", "sub-t1099", "sub-t1122", "sub-t1142"]
     
     for sub in subject:
-        if("sub-" in sub.name and not(".html" in sub.name)):
+        if("sub-" in sub.name and not(".html" in sub.name)): #and (sub.name in problem_subs)
             print(sub.name)
             funcindir = indir + sub.name + '/' + ses + '/func/' 
             sesoutdir = outdir + sub.name + '/' + ses + '/'
             #if they have a single MID run
-            preproc_rest = os.path.join(funcindir, sub.name +'_'+ses+'_task-mid_run-01_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz')
+            preproc_rest = os.path.join(funcindir, sub.name +'_'+ses+'_task-mid_run-01_space-MNI152NLin6Asym_desc-preproc_bold.nii.gz')
             if(os.path.exists(preproc_rest)):
                 os.makedirs(os.path.join(outdir, sub.name, ses), exist_ok=True)
                 try:
@@ -176,17 +197,6 @@ def main():
                 except Exception as e:
                     print(e)
                     print(sub.name + " failed :( ")
-    '''
-    sub = "sub-t1040"
-    funcindir = 'sub-t1040/ses-1/func/' 
-    sesoutdir = outdir + sub + '/' + ses + '/'
-    #sub-t1001_ses-1_task-mid_run-02_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz
-    #if(os.path.exists(os.path.join(funcindir, sub +'_'+ses+'_task-mid_run-01_space-MNI152NLin2009cAsym_desc-preproc_bold.nii.gz'))):
-    print("here")
-    os.makedirs(os.path.join(outdir, sub, ses), exist_ok=True)
-    sub_counts = mid_fl(sub, ses, funcindir, sesoutdir)
-    tr_counts.append(sub_counts)
-    '''
     with open('transitions_MID_TRs.csv', 'w') as myfile:
         wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
         for row in tr_counts:
