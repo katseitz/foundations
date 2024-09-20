@@ -335,7 +335,7 @@ def caller(sub, ses, funcindir, sesoutdir):
     i = 1
     tr_list = []
     while(i <= len(glob.glob(funcindir + "*_ses-1_task-mid_run-*_space-MNI152NLin6Asym_desc-preproc_bold.nii.gz"))):
-        print("########\nworking on run 0" + str(i) + " for participant " + sub + "\n########")
+        print("########\nworking on run 0" + str(i) + " for participant " + sub + "\n########", flush=True)
         sub_counts = finish_preproc(sub, ses, str(i), funcindir, sesoutdir)
         counts_confounds = define_confounds(sub, ses, str(i), funcindir, sesoutdir)
         tr_list.append(counts_confounds[0])
@@ -353,9 +353,9 @@ def main():
     subject = os.scandir(indir)
     tr_counts = [["ID", "run", "original_shape", "regressed_TRs"]]
     extracted = [["ID", "VS_Oldham_Rew_AntGain_v_AntNoGain_avg", "VS_Oldham_Rew_AntGain_v_AntNoGain_avg",  
-                "OFC_Oldham_ConGainHit_v_ConGainMiss_avg", "VS_Oldham_Con_ConGainHit_v_ConGainMiss_avg"]]
+                "OFC_Oldham_ConGainHit_v_ConGainMiss_avg", "VS_Oldham_Con_ConGainHit_v_ConGaiSSnMiss_avg"]]
     for sub in subject:
-        if(("sub-f1" in sub.name) and not(".html" in sub.name)):
+        if(("sub-f11" in sub.name) and not(".html" in sub.name)):
             funcindir = indir + sub.name + '/' + ses + '/func/' 
             sesoutdir = outdir + sub.name + '/' + ses + '/'
             #if they have a single MID run
