@@ -355,7 +355,7 @@ def main():
     extracted = [["ID", "VS_Oldham_Rew_AntGain_v_AntNoGain_avg", "VS_Oldham_Rew_AntGain_v_AntNoGain_avg",  
                 "OFC_Oldham_ConGainHit_v_ConGainMiss_avg", "VS_Oldham_Con_ConGainHit_v_ConGaiSSnMiss_avg"]]
     for sub in subject:
-        if(("sub-f11" in sub.name) and not(".html" in sub.name)):
+        if(("sub-f12" in sub.name) and not(".html" in sub.name)):
             funcindir = indir + sub.name + '/' + ses + '/func/' 
             sesoutdir = outdir + sub.name + '/' + ses + '/'
             #if they have a single MID run

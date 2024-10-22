@@ -44,7 +44,7 @@ def main():
         cortex_file = os.path.join(participant_path, 'stats/aseg.stats')
         subject = cortex_file.split("/")[9] #identify participant
         print(subject,i)
-        if(subject != "fsaverage"):
+        if(subject == 'sub-f10452' and subject != "fsaverage"):#(subject != "fsaverage" and subject != 'sub-f10332_orig' and subject != 'sub-f10412_orig' and subject != 'sub-f11492_orig' and subject != 'sub-f10202' and subject != 'sub-f10452' and subject != 'sub-f10892' and subject != 'sub-f10662' and subject != 'sub-f10902' and subject != 'sub-f10032'):
             asegRaw = fsStat2pd(cortex_file)
             
             # get lhSurfaceHoles, rhSurfaceHoles, SurfaceHoles
@@ -127,7 +127,7 @@ def main():
     all_subs_df = pd.DataFrame(values, columns=final_df_columns)
     all_subs_df.index = patient_id
     #print(all_subs_df.shape)
-    all_subs_df.to_csv("foundations_t1_sMRI_09172024.csv")
+    all_subs_df.to_csv("foundations_t1_sMRI_10102024.csv")
 
         
         

@@ -3,7 +3,7 @@
 #SBATCH -A p32480 #TODO insert your own pnumber
 #SBATCH -p normal
 #SBATCH -t 16:00:00
-#SBATCH --array=0-3%10 #165 #TODO change this
+#SBATCH --array=1-4%4 #4 #TODO change this
 #SBATCH --job-name="fmriprep_TEAM_\${SLURM_ARRAY_TASK_ID}"
 #SBATCH --output=fmriprep.%A_%a.out
 #SBATCH --nodes=1
@@ -15,7 +15,7 @@ module load singularity/latest
 echo "modules loaded" 
 echo "beginning preprocessing"
 
-IFS=$'\n' read -d '' -r -a input_args < list_subs.txt
+IFS=$'\n' read -d '' -r -a input_args < list_subs_akash.txt
 
 export SINGULARITYENV_TEMPLATEFLOW_HOME=/projects/b1108/templateflow
 
